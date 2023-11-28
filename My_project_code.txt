@@ -1,0 +1,322 @@
+BakeryController.java :
+ package com.bookStore.controller;
+
+import com.bookStore.entity.Bakery;
+import com.bookStore.entity.MyBakeryList;
+import com.bookStore.service.BakeryService;
+import com.bookStore.service.MyBakeryListService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.bookStore.entity.Bakery;
+import com.bookStore.entity.MyBakeryList;
+import com.bookStore.service.BakeryService;
+import com.bookStore.service.MyBakeryListService;
+
+import java.util.*;
+
+@Controller
+public class BakeryController {
+
+    @Autowired
+    private BakeryService service;
+
+    @Autowired
+    private MyBakeryListService myBakeryService;
+
+    @GetMapping("/")
+    public String home() {
+        return "home";
+    }
+
+    @GetMapping("/bakery_register")
+    public String bakeryRegister() {
+        return "bakeryRegister";
+    }
+
+    @GetMapping("/available_bakery")
+    public ModelAndView getAllBakery() {
+        List<Bakery> list=service.getAllBakery();
+        return new ModelAndView("bakeryList","bakery",list);
+    }
+
+    @PostMapping("/save")
+    public String addBakery(@ModelAttribute Bakery b) {
+        service.save(b);
+        return "redirect:/available_bakery";
+    }
+    @GetMapping("/my_bakery")
+    public String getMyBakery(Model model)
+    {
+        List<MyBakeryList>list=myBakeryService.getAllMyBakery();
+        model.addAttribute("bakery",list);
+        return "myBakery";
+    }
+    @RequestMapping("/mylist/{id}")
+    public String getMyList(@PathVariable("id") int id) {
+        Bakery b=service.getBakeryById(id);
+        MyBakeryList mb1=new MyBakeryList(b.getId(),b.getName(),b.getBtype(),b.getPrice());
+        myBakeryService.saveMyBakery(mb1);
+        return "redirect:/my_bakery";
+    }
+
+    @RequestMapping("/editBakery/{id}")
+    public String editBakery(@PathVariable("id") int id,Model model) {
+        Bakery b=service.getBakeryById(id);
+        model.addAttribute("bakery",b);
+        return "bakeryEdit";
+    }
+    @RequestMapping("/deleteBakery/{id}")
+    public String deleteBakery(@PathVariable("id")int id) {
+        service.deleteById(id);
+        return "redirect:/available_bakery";
+    }
+
+}
+
+
+MyBakeryListController.java :
+ package com.bookStore.controller;
+
+import com.bookStore.service.MyBakeryListService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+public class MyBakeryListController {
+
+    @Autowired
+    private MyBakeryListService service;
+
+    @RequestMapping("/deleteMyList/{id}")
+    public String deleteMyList(@PathVariable("id") int id) {
+        service.deleteById(id);
+        return "redirect:/my_bakery";
+    }
+
+}
+
+
+Bakery.java :
+  package com.bookStore.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Bakery {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private int id;
+    private String name;
+    private String btype;
+    private String price;
+    public Bakery(int id, String name, String btype, String price) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.btype = btype;
+        this.price = price;
+    }
+    public Bakery() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getBtype() {
+        return btype;
+    }
+    public void setBtype(String btype) {
+        this.btype = btype;
+    }
+    public String getPrice() {
+        return price;
+    }
+    public void setPrice(String price) {
+        this.price = price;
+    }
+
+}
+
+
+MyBakeryList.java :
+  package com.bookStore.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="MyBakery")
+public class MyBakeryList {
+
+    @Id
+    private int id;
+    private String name;
+    private String btype;
+    private String price;
+    public MyBakeryList() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+    public MyBakeryList(int id, String name, String btype, String price) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.btype = btype;
+        this.price = price;
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getBtype() {
+        return btype;
+    }
+    public void setBtype(String btype) {
+        this.btype = btype;
+    }
+    public String getPrice() {
+        return price;
+    }
+    public void setPrice(String price) {
+        this.price = price;
+    }
+}
+
+
+BakeryRepository.java :
+ package com.bookStore.repository;
+
+import com.bookStore.entity.Bakery;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface BakeryRepository extends JpaRepository<Bakery,Integer>  {
+
+}
+
+
+MyBakeryRepository.java  :
+package com.bookStore.repository;
+
+import com.bookStore.entity.MyBakeryList;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface MyBakeryRepository extends JpaRepository<MyBakeryList,Integer>{
+
+}
+
+BakeryService.java :
+package com.bookStore.service;
+
+import java.util.List;
+
+import com.bookStore.entity.Bakery;
+import com.bookStore.repository.BakeryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class BakeryService {
+
+    @Autowired
+    private BakeryRepository bRepo;
+
+    public void save(Bakery b) {
+        bRepo.save(b);
+    }
+
+    public List<Bakery> getAllBakery(){
+        return bRepo.findAll();
+    }
+
+    public Bakery getBakeryById(int id) {
+        return bRepo.findById(id).get();
+    }
+    public void deleteById(int id) {
+        bRepo.deleteById(id);
+    }
+}
+
+
+MyBakeryListService.java :
+package com.bookStore.service;
+
+import java.util.List;
+
+import com.bookStore.entity.MyBakeryList;
+import com.bookStore.repository.MyBakeryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class MyBakeryListService {
+
+    @Autowired
+    private MyBakeryRepository mybakery;
+
+    public void saveMyBakery(MyBakeryList book) {
+        mybakery.save(book);
+    }
+
+    public List<MyBakeryList> getAllMyBakery(){
+        return mybakery.findAll();
+    }
+
+    public void deleteById(int id) {
+        mybakery.deleteById(id);
+    }
+}
+
+
+BakeryStoreApplication.java :
+package com.bookStore;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BakeryStoreApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BakeryStoreApplication.class, args);
+    }
+
+}
+
+
+
+
+
